@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo</title>
+    <link rel="stylesheet" href="./src/style.css">
+  </head>
+  <body>
+    <div id="app">
+      <section class="todo-container">
+        <h1 class="title">Todos</h1>
+        <section class="panel">
+          <div class="count-total" style="font-size: 16px">Sum : 0</div>
+          <div class="todo-controls">
+              <button class="all active" type="button">Total</button>
+              <button class="isProgress" type="button">Ongoing</button>
+              <button class="completed" type="button">Finished</button>
+          </div>
+        </section>
+
+        <section class="todo-form">
+          <input
+            class="todo-input"
+            type="text"
+            placeholder="할 일을 추가해주세요."
+          />
+          <ul class="todo-items">
+            <!-- <li>hi</li> -->
+          </ul>
+        </section>
+
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
