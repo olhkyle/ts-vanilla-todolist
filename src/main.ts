@@ -6,108 +6,165 @@ interface Todo {
     isDone: boolean;
 }
 
+
+enum FilterStatus {
+    All = 'all',
+    Completed = 'completed',
+    InProgress = 'inProgress',
+}
+
+
+type FilterStatusType = typeof FilterStatus[keyof typeof FilterStatus];
+
 class TodoApp {
     todoList: Todo[];
     constructor(){
-        
+        this.todoList = []; // 초기 배열값 초기화
+        this.initEvent();
     }
+
+    // event를 붙이는 부분 -> 
     initEvent(){
-        const inputEl = document.querySelector('.todo-input');
-        inputEl?.addEventListener('keydown', this.addTodo.bind(this));
+        const inputEl = <HTMLInputElement>document.querySelector('.todo-input');
+        const todoControlsEl = document.querySelectorAll('.todo-controls button');
+        
+        if(inputEl){
+            inputEl.addEventListener('keydown', this.addTodo.bind(this));
+        }
+
+        todoControlsEl.forEach(btn => {
+            const [btnClass] = btn.classList.value.split(' ');
+            btn.addEventListener('click', (event: MouseEventInit) => {
+                const currentTodoList = this.getTodoListByFilter(btnClass);
+                this.toggleActiveStatus(event);
+                this.render(currentTodoList);
+            })
+        })
     }
-    addTodo(event:any){
+
+    toggleActiveStatus(event: MouseEventInit){
+        //active가 class가 있는 button을 포함한 모든 버튼 classList 초기화
+        const todoControlsEl = document.querySelectorAll('.todo-controls button');
+        todoControlsEl.forEach(btn => btn.classList.remove('active'));
+
+        ((event as MouseEvent).target as HTMLButtonElement).classList.add('active');
+    }
+
+    // jsdoc에 명세를 text로 했지만, event를 받아와야 하기 때문에, text가 아닌 event를 받을 예정
+    addTodo(event: KeyboardEventInit){
         if (event.key !== 'Enter'){
             return;
         }
-            const target = event.target;
-
-            if (!target.value){
-                return;
-            }
-            this.todoList.push({
-                id: this.todoList.length + 1,
-                isDone: false,
-                content: target.value,
-            })
-            this.render();
-    }
-
-    /**
-     * 
-     * 모든 할 일을 조회할 수 있다.
-     * @returns {Todo[]} 전체 할 일
-     */
-    getTodoList(){
-        // return this.todoList;
-        return [
-          {
-            id: 2,
-            content: 'T',
+        const Target = <HTMLInputElement>(event as KeyboardEvent).target;
+        if (!Target.value){
+            return;
+        }
+        this.todoList.push({
+            id: this.todoList.length + 1,
+            content: Target.value,
             isDone: false,
-        },
-        {
-          id: 1,
-          content: 'T',
-          isDone: false,
-        },
-      ]
+        })
+        Target.value = '';
+
+        this.render(this.todoList);
     }
 
-    /**
-     * 모든 할 일을 필터링하여 조회할 수 있다.
-     * 
-     * @param {string} filterType
-     * @returns {Todo[]} 필터링 된 할 일
-     */
-    getTodoListByFilter(filterType){
-
+    getTodoListByFilter(filterType: FilterStatusType){
+        if(filterType === FilterStatus.All){return this.todoList};
+        if(filterType === FilterStatus.Completed){
+            return this.todoList.filter(todo => todo.isDone == true)
+        }
+        if(filterType === FilterStatus.InProgress){
+            return this.todoList.filter(todo => todo.isDone == false)
+        }
     }
 
-    /**
-     * 할 일의 내용과 상태를 수정할 수 있다.
-     * 
-     * 
-     * @param {Object} todo - 수정될 할 일
-     * @param {string} [todo.text] - 수정될 내용
-     * @param {string} [todo.status] - 수정될 상태
-     */
+    updateTodoContent(event : MouseEventInit, selectedId: Todo['id']){
+        const onLoadText = (event as MouseEvent) && ((event as MouseEvent).target as HTMLDivElement).innerText;
 
-    updateTodo({text, status}){
+        if(!onLoadText){
+            return;
+        }
 
+        const selectedIndex = this.todoList.findIndex((todo) => todo.id = selectedId);
+
+        const selectedTodo = this.todoList[selectedIndex];
+        const newTodo = {
+            ...selectedTodo,
+            content: onLoadText
+        }
+        this.todoList.splice(selectedIndex, 1, newTodo); // 기존에 변경되기 전 녀석을 삭제
+        this.render(this.todoList);
     }
 
-
-    /**
-     * 특정 할 일을 제거할 수 있다.
-     * 
-     * @param {number} id 
-     */
-    removeTodo(id){
-
+    updateTodoStatus(selectedId:Todo['id']){
+        const selectedIndex = this.todoList.findIndex((todo) => todo.id = selectedId);
+        const selectedTodo = this.todoList[selectedIndex];
+        const newTodo = {
+            ...selectedTodo,
+            isDone: !selectedTodo.isDone, // change 될 때마다 뒤집기
+        }
+        this.todoList.splice(selectedIndex, 1, newTodo)
+        this.render(this.todoList);
     }
 
-    generateTodoList(todoList:Todo){
+    removeTodo(selectedId: Todo['id']){
+        console.log(selectedId);
+
+        this.todoList = this.todoList.filter(todo => todo.id !== selectedId);
+
+        console.log(this.todoList)
+        this.render(this.todoList);
+    }
+
+    generateTodoList(todo : Todo){
         const containerEl = document.createElement('div');
-        const todoTemplate = `<div class="item-div">
-            <input type="checkbox" ${todoList.isDone && 'checked'}/>
-            <div class="content ${todoList.isDone && 'checked'}" contentEditable${todoList.content}></div>
-            <button type="button">X</button>
-        </div>`
+        const todoTemplate = `
+            <input type="checkbox" class="checkbox" ${todo.isDone && "checked"}/>
+            <p class="content ${todo.isDone && 'checked'}" contentEditable>${todo.content}</p>
+            <button type="button" class="delete-btn">X</button>
+        `
 
-
-        containerEl.classList.add('item');
+        containerEl.classList.add('item-div');
         containerEl.innerHTML= todoTemplate;
 
+        const checkboxEl = containerEl.querySelector('.checkbox');
+        const contentEl = containerEl.querySelector('.content');
+        const deleteBtn = containerEl.querySelector('.item-div .delete-btn');
+        if(!contentEl){
+            return;
+        }
+        
+        checkboxEl?.addEventListener('change', () => this.updateTodoStatus(todo.id))
+        contentEl.addEventListener('blur', (event) => this.updateTodoContent(event, todo.id) )
+        deleteBtn?.addEventListener('click', () => this.removeTodo(todo.id));
+        if (deleteBtn){
+            containerEl.appendChild(deleteBtn);
+        }
+        
         return containerEl;
     }
 
-    render(){
+    // todoList를 받아서 render 해주는데 이 때, 매개변수에 타입을 Todo[]로 지정하고, 초깃값을 []빈배열로 지정
+    render(todoList: Todo[] = []){
         const todoListEl = document.querySelector('.todo-items');
+        const todoCountEl = <HTMLSpanElement>document.querySelector('#todo-count');
 
-        const fragment = document.createDocumentFragment();
-        const todoListComponent =  this.getTodoList().map((todo) => this.generateTodoList(todo))
-        fragment.append(...todoListComponent);
-        todoListEl?.appendChild(fragment);
+        todoListEl?.replaceChildren(); // 값이 들어오지 않았을 때는 삭제하는 것
+
+        const fragment = document.createDocumentFragment(); // 가상의 DOM
+        const todoListComponent = todoList?.map((todo) => this.generateTodoList(todo))
+        // todoList.shift();
+        
+        if(todoListComponent){
+            fragment.append(...todoListComponent);
+        }
+        if(todoListEl){
+            todoListEl.appendChild(fragment);
+        }
+        if (todoCountEl){
+            todoCountEl.innerText = String(todoList.length);
+        }
     }
 }
 
