@@ -3,7 +3,7 @@
 ## Create
 - 할 일을 추가할 수 있다.
 
-<img src="./src/images/2_inputtext.png"width="500px" height="330px"></img>
+/Users/kwonhyukmin/Desktop/z_logical_typescript/vite-todo/vite-todo/src/images/1_start.png
 
 ## Read
 - 모든 할 일을 조회할 수 있다.
